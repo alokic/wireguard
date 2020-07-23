@@ -1,0 +1,28 @@
+version: "3.3"
+services:
+  wireguard-client:
+    image: wireguard-go:latest
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    volumes:
+      - /dev/net/tun:/dev/net/tun
+      # Folder with 'publickey', 'privatekey' and 'wg0.conf'
+      - ./deploy/client:/etc/wireguard
+      - ./:/scripts
+    environment:
+      - WG_TYPE=client
+      - WG_COLOR_MODE=always
+      - LOG_LEVEL=debug
+      - PASSWORD_TEMP=temppassword
+      - SSH_PUBLIC_KEY=test
+      - SSH_PRIVATE_KEY= |
+        test
+        test
+
+      - SSH_AUTHORIZED_KEYS=test
+    ports:
+      - 51820:51820/udp
+    restart: always
+    command: "/scripts/entrypoint.sh"
