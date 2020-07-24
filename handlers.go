@@ -15,7 +15,7 @@ type handlers struct {
 	c   *wgclient.Svc
 }
 
-// getClientProfile returns wgclient specifc Profile:
+// clientGererateConfig returns wgclient config:
 // Input:
 // // {
 // // 	"id": "5",
@@ -31,9 +31,9 @@ type handlers struct {
 // //    ],
 // //    "public_key": "dhfjdbfjdbffg"
 // }
-func (h *handlers) getClientProfile() http.Handler {
+func (h *handlers) clientGererateConfig() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var in wgclient.CreateInput
+		var in wgclient.GenerateConfigInput
 
 		err := json.NewDecoder(r.Body).Decode(&in)
 		if err != nil {
@@ -41,7 +41,7 @@ func (h *handlers) getClientProfile() http.Handler {
 			return
 		}
 
-		out, err := h.c.Create(r.Context(), &in)
+		out, err := h.c.GenerateConfig(r.Context(), &in)
 		if err != nil {
 			writeError(fmt.Errorf("wgclient:create:%v", err), http.StatusBadRequest, w)
 			return

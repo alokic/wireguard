@@ -44,21 +44,21 @@ func NewSvc(store Store, ip IPSvc, wgServer WGServer) *Svc {
 	return &Svc{store: store, ip: ip, wgServer: wgServer}
 }
 
-// CreateInput struct
-type CreateInput struct {
+// GenerateConfigInput struct
+type GenerateConfigInput struct {
 	ID        string `json:"id,omitempty"`
 	PublicKey string `json:"public_key,omitempty"`
 }
 
-// CreateOutput needs to be returned to wgclient
-type CreateOutput struct {
+// GenerateConfigOutput needs to be returned to wgclient
+type GenerateConfigOutput struct {
 	Client            *WGClient       `json:"client,omitempty"`
 	SSHAuthorizedKeys []string        `json:"ssh_authorized_keys,omitempty"`
 	Peers             []wgpeer.WGPeer `json:"peers,omitempty"`
 }
 
-// Create wgclient.
-func (s *Svc) Create(ctx context.Context, in *CreateInput) (*CreateOutput, error) {
+// GenerateConfig wgclient.
+func (s *Svc) GenerateConfig(ctx context.Context, in *GenerateConfigInput) (*GenerateConfigOutput, error) {
 	v, err := s.store.Get(ctx, s.key(in.ID))
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func (s *Svc) Create(ctx context.Context, in *CreateInput) (*CreateOutput, error
 		}
 	}
 
-	return &CreateOutput{
+	return &GenerateConfigOutput{
 		Client:            client,
 		SSHAuthorizedKeys: s.wgServer.SSHAuthorizedKeys(ctx),
 		Peers:             s.wgServer.ServerPeers(ctx),

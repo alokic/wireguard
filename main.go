@@ -35,7 +35,7 @@ func main() {
 	fs.StringVar(&cfg.SSHPublicKey, "pubkey", cfg.SSHPublicKey, "ssh public key")
 	fs.StringVar(&cfg.SSHPrivateKey, "privkey", cfg.SSHPrivateKey, "ssh private key")
 
-	c := cache.Map{}
+	c := cache.NewMap()
 	ipsvc := ip.NewSvc(c)
 
 	wgs := wgserver.NewSvc(c, ipsvc, cfg.SSHPublicKey, cfg.SSHPrivateKey)
@@ -66,7 +66,7 @@ func main() {
 }
 
 func setRoutes(r router.Router, h *handlers) {
-	r.Handle("post", "/wgclient", h.getClientProfile())
+	r.Handle("post", "/wgclient", h.clientGererateConfig())
 
 	r.Handle("get", "/health", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
