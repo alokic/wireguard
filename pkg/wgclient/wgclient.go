@@ -44,6 +44,11 @@ func NewSvc(store Store, ip IPSvc, wgServer WGServer) *Svc {
 	return &Svc{store: store, ip: ip, wgServer: wgServer}
 }
 
+// Create wgclient.
+func (s *Svc) Create(ctx context.Context) error {
+	return nil
+}
+
 // GenerateConfigInput struct
 type GenerateConfigInput struct {
 	ID        string `json:"id,omitempty"`

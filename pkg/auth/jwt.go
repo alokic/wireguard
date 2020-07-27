@@ -30,13 +30,16 @@ var (
 // ClaimVerifier verifies claims from persistent store like database.
 type ClaimVerifier func(map[string]interface{}) error
 
+// ErrorHandler type
+type ErrorHandler func(err error) http.Handler
+
 // JWT auth struct.
 type JWT struct {
 	key           string
 	queryTokenKey string
 	headerKey     string
 	verifier      ClaimVerifier
-	errHandler    http.Handler
+	errHandler    ErrorHandler
 }
 
 // NewJWT is constructor of JWT.
@@ -48,9 +51,11 @@ func NewJWT(key string) *JWT {
 		verifier: func(claims map[string]interface{}) error {
 			return nil
 		},
-		errHandler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			writeError(ErrUserNotAllowed, http.StatusUnauthorized, w)
-		}),
+		errHandler: func(err error) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				writeError(err, http.StatusUnauthorized, w)
+			})
+		},
 	}
 }
 
@@ -60,7 +65,7 @@ func (j *JWT) SetClaimVerifier(v ClaimVerifier) {
 }
 
 // SetErrHandler set the error handler used when jwt auth fail.
-func (j *JWT) SetErrHandler(h http.Handler) {
+func (j *JWT) SetErrHandler(h ErrorHandler) {
 	j.errHandler = h
 }
 
@@ -99,11 +104,11 @@ func (j *JWT) VerifyToken(jwttoken string) (map[string]interface{}, error) {
 		return []byte(j.key), nil
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "jwt.Verify")
+		return nil, errors.Wrap(err, "jwt.VerifyToken")
 	}
 
 	if !token.Valid {
-		return nil, errors.Wrap(ErrTokenInvalid, "jwt.Verify")
+		return nil, errors.Wrap(ErrTokenInvalid, "jwt.VerifyToken")
 	}
 
 	return token.Claims.(jwtgo.MapClaims), nil
@@ -128,13 +133,13 @@ func (j *JWT) HTTPMiddleware(next http.Handler) http.Handler {
 
 		claims, err := j.VerifyToken(token)
 		if err != nil {
-			j.errHandler.ServeHTTP(w, r)
+			j.errHandler(err).ServeHTTP(w, r)
 			return
 		}
 
 		err = j.VerifyClaims(claims)
 		if err != nil {
-			j.errHandler.ServeHTTP(w, r)
+			j.errHandler(err).ServeHTTP(w, r)
 			return
 		}
 

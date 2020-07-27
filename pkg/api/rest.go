@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -9,13 +9,24 @@ import (
 	"bitbucket.org/qubole/wireguard/pkg/wgserver"
 )
 
-type handlers struct {
-	cfg *Config
-	s   *wgserver.Svc
-	c   *wgclient.Svc
+// REST apis
+type REST struct {
+	WGS *wgserver.Svc
+	WGC *wgclient.Svc
 }
 
-// clientGererateConfig returns wgclient config:
+// StatusHandler is for any http status code.
+type StatusHandler struct {
+	Err  error
+	Code int
+}
+
+// ServeHTTP is http.Handler insterface implementation.
+func (s StatusHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	writeError(s.Err, s.Code, w)
+}
+
+// ClientGererateConfig returns wgclient config:
 // Input:
 // // {
 // // 	"id": "5",
@@ -31,7 +42,7 @@ type handlers struct {
 // //    ],
 // //    "public_key": "dhfjdbfjdbffg"
 // }
-func (h *handlers) clientGererateConfig() http.Handler {
+func (h *REST) ClientGererateConfig() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var in wgclient.GenerateConfigInput
 
@@ -41,7 +52,7 @@ func (h *handlers) clientGererateConfig() http.Handler {
 			return
 		}
 
-		out, err := h.c.GenerateConfig(r.Context(), &in)
+		out, err := h.WGC.GenerateConfig(r.Context(), &in)
 		if err != nil {
 			writeError(fmt.Errorf("wgclient:create:%v", err), http.StatusBadRequest, w)
 			return

@@ -46,6 +46,9 @@ func (i *Svc) Get(ctx context.Context) (string, error) {
 	for i := 2; i >= 0; i-- {
 		arr[i] = iter & 255
 		iter = iter >> 8
+		if iter == 0 {
+			break
+		}
 	}
 	// overflow at 255
 	return fmt.Sprintf("10.%d.%d.%d", arr[0], arr[1], arr[2]), nil
